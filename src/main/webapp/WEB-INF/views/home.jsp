@@ -30,22 +30,24 @@
 				<span class="pLabel">Keel:</span><span class="pValue">{{= lang}}</span>
 			</div>
 			<div class="pRow">
-				<span>Teenus aktiivne kuni {{= activeUntil}}</span>
+				<span>Teenus aktiivne kuni {{= activeUntil}} {{= activeUntilTime}}</span>
 			</div>
 			<div class="pRow">
-				<span>XL-teenus {{if xlStatus}}aktiivne {{= xlActiveSince}} {{= xlActiveUntil}} {{= xlLang}} keeles.{{else}}mitteaktiivne.{{/if}}</span>
+				<span>XL-teenus {{if xlStatus}}aktiivne {{= xlActiveSince}} - {{= xlActiveUntil}} {{= xlLang}} keeles.{{else}}mitteaktiivne.{{/if}}</span>
 			</div>
-				{{if overrideNr}}
+			{{else}}<div class="pRow">Teenus mitteaktiivne</div>
+			{{/if}}
+				{{if overrideNrs}}
 				<div class="pOverride"><span>Välja arvatud:</span>
-				    {{each overrideNr}}
-					<div class="pRow">
-						<span class="pLabel"> ${$index}:</span><span class="pValue">${$value}</span>
-					</div>
-					{{/each}} 
+					<table class="table">
+						<tr><th>Nimi</th><th>Number</th></tr>
+				    {{each overrideNrs}}
+						<tr><td>{{= $index}}</td><td>{{= $value}}</td></tr>
+					{{/each}}
+					</table> 
 				</div>
 				{{/if}}
-			{{else}}<div>Teenus mitteaktiivne</div>
-			{{/if}}
+			
 	
 		</div>
 </script>
@@ -70,9 +72,9 @@
 		// automatically stop requests after this many returns of the same data. 0 = disabled.
 		}, function(remoteData, success, xhr, handle) {
 			
-			/* $(".phoneMain").slideUp(2000, function() {
+			$(".phoneMain").slideUp(2000, function() {
 				$(this).remove();
-			}); */
+			}); 
 
 			$("#phoneReqTemplate").tmpl(remoteData).appendTo($("#content"));
 			

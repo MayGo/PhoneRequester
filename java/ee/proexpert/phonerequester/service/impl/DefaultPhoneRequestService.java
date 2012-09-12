@@ -29,7 +29,7 @@ import ee.proexpert.phonerequester.service.PhoneRequestService;
 /**
  * Implementation of the PhoneRequestService interface.
  * 
- * @author Your Name Here
+ * @author Maigo Erit
  * @version 1.0
  * 
  */
@@ -131,11 +131,11 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 		PhoneReq p = new PhoneReq();
 
 		p.reqNr = timesRunned;
-		p.active = (hm.get("active") == "A") ? true : false;
+		p.active = (hm.get("active").equals("A")) ? true : false;
 		p.phoneNr = hm.get("phoneNr").trim();
-		p.xlStatus = (hm.get("xlStatus") == "J") ? true : false;
-		p.lang = (hm.get("lang") == "I") ? "Inglise" : (hm.get("lang") == "E") ? "Eesti" : "";
-		p.xlLang = (hm.get("xlLang") == "I") ? "Inglise" : (hm.get("xlLang") == "E") ? "Eesti" : "";
+		p.xlStatus = (hm.get("xlStatus").equals("J")) ? true : false;
+		p.lang = (hm.get("lang").equals("I")) ? "Inglise" : (hm.get("lang").equals("E")) ? "Eesti" : "";
+		p.xlLang = (hm.get("xlLang").equals("I")) ? "Inglise" : (hm.get("xlLang").equals("E")) ? "Eesti" : "Eesti";
 		
 		if (!StringUtils.isBlank(hm.get("activeUntil"))) {
 			try {
@@ -150,7 +150,7 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 		p.xlActiveSince = parseTime(hm.get("xlActiveSince"));
 		p.xlActiveUntil = parseTime(hm.get("xlActiveUntil"));
 
-		p.overrideActive = (hm.get("overrideActive") == "K") ? true : false;
+		p.overrideActive = (hm.get("overrideActive").equals("K")) ? true : false;
 
 		List<OverrideNr> overrideNr = new ArrayList<OverrideNr>();
 

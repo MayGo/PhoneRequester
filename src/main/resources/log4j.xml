@@ -11,12 +11,9 @@
 	</appender>
 
 	<!-- Loggers -->
-	<logger name="org.springframework.integration">
-		<level value="info" />
-	</logger>
 
 	<logger name="ee.proexpert.phonerequester">
-		<level value="info" />
+		<level value="debug" />
 	</logger>
 
 	<!-- Root Logger -->
