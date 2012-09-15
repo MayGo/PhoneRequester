@@ -51,11 +51,7 @@
 	
 		</div>
 </script>
-
-
-		<div id="content" class="prepend-1 span-22 append-1 prepend-top last">
-			
-		</div>
+		<div id="content" class="prepend-1 span-22 append-1 prepend-top last"></div>
 	</div>
 
 	<script type="text/javascript">
@@ -72,10 +68,11 @@
 		// automatically stop requests after this many returns of the same data. 0 = disabled.
 		}, function(remoteData, success, xhr, handle) {
 			
+			//remove last template object
 			$(".phoneMain").slideUp(2000, function() {
 				$(this).remove();
 			}); 
-
+			//append new template obj
 			$("#phoneReqTemplate").tmpl(remoteData).appendTo($("#content"));
 			
 		});

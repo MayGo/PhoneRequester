@@ -1,22 +1,28 @@
-
 package ee.proexpert.phonerequester.service;
+
 import ee.proexpert.phonerequester.model.PhoneReq;
 
 /**
- * Provides some basic methods for controlling the flow of Twitter messages.
+ * Provides some methods for retrieving legacy "phone service" files and keeps
+ * last PhoneReq instance.
  * 
- * @author Your Name Here
+ * @author Maigo Erit
  * @version 1.0
  * 
  */
 public interface PhoneRequestService {
 
 	/**
-	 * Retrieve the already polled Twitter messages. Keep in mind this
-	 * method does not perform the actual Twitter search. It merely returns all
-	 * the Tweets that were previously polled through Spring Integration and
-	 * which have been cached for returning those to the web-frontend. */
+	 * Retrieve already polled PhoneReq. This is the last one retrieved over
+	 * web.
+	 * 
+	 * @return PhoneReq
+	 */
 	PhoneReq getLastPhoneReq();
 
+	/**
+	 * Retrieves file from web and parses file contents and saves it as PhoneReq
+	 * object, so getLastPhoneReq function can retrieve it.
+	 */
 	public void doWebQuery();
 }

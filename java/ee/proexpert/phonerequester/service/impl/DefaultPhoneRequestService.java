@@ -36,11 +36,19 @@ import ee.proexpert.phonerequester.service.PhoneRequestService;
 @Service
 public class DefaultPhoneRequestService implements PhoneRequestService {
 
-	private static final Log log = LogFactory.getLog(DefaultPhoneRequestService.class);
+	private static final Log log = LogFactory
+			.getLog(DefaultPhoneRequestService.class);
 	/** Holds last recieved PhoneRequest */
 	private PhoneReq lastPhoneReq;
 
-	int timesRunned = 0;
+	/**
+	 * Is incremented each time file is queried and is included in file name
+	 */
+	private int timesRunned = 0;
+	/**
+	 * maximum times file name is incremented and retrieved. If maximum is
+	 * reached then timeRunned=0
+	 */
 	private static final int MAX_RUN_TIMES = 10;
 
 	/** {@inheritDoc} */
@@ -59,13 +67,15 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 	@Scheduled(fixedRate = 5000)
 	public void doWebQuery() {
 		this.increment();
-		String url = "http://people.proekspert.ee/ak/data_" + timesRunned + ".txt";
+		String url = "http://people.proekspert.ee/ak/data_" + timesRunned
+				+ ".txt";
 		URL u;
 		InputStream is = null;
 		DataInputStream dis;
 		String s;
 
 		try {
+			// Lets try to get the file and parse it
 			u = new URL(url);
 			is = u.openStream();
 			log.info("Query for file: " + url);
@@ -90,10 +100,6 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 				// just going to ignore this one
 			}
 		}
-		if (timesRunned >= MAX_RUN_TIMES) {
-			timesRunned = 0;
-			log.info("Reseting. Maximum times runned:" + MAX_RUN_TIMES);
-		}
 	}
 
 	/**
@@ -114,7 +120,7 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 		SimpleDateFormat formatter = new SimpleDateFormat("YYYYMMDD");
 		RowStr m = new RowStr(row);
 		Map<String, String> hm = new HashMap<String, String>();
-
+		// put everything in map of strings for easy access.
 		hm.put("active", m.left(1));
 		hm.put("phoneNr", m.left(20));
 		hm.put("xlStatus", m.left(1));
@@ -128,21 +134,23 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 		hm.put("overrideNrs", m.left(120));
 		hm.put("overrideNames", m.left(160));
 
+		// parse and save map into PhoneReq object
 		PhoneReq p = new PhoneReq();
-
 		p.reqNr = timesRunned;
 		p.active = (hm.get("active").equals("A")) ? true : false;
 		p.phoneNr = hm.get("phoneNr").trim();
 		p.xlStatus = (hm.get("xlStatus").equals("J")) ? true : false;
-		p.lang = (hm.get("lang").equals("I")) ? "Inglise" : (hm.get("lang").equals("E")) ? "Eesti" : "";
-		p.xlLang = (hm.get("xlLang").equals("I")) ? "Inglise" : (hm.get("xlLang").equals("E")) ? "Eesti" : "Eesti";
-		
+		p.lang = (hm.get("lang").equals("I")) ? "Inglise" : (hm.get("lang")
+				.equals("E")) ? "Eesti" : "";
+		p.xlLang = (hm.get("xlLang").equals("I")) ? "Inglise" : (hm
+				.get("xlLang").equals("E")) ? "Eesti" : "Eesti";
+
 		if (!StringUtils.isBlank(hm.get("activeUntil"))) {
 			try {
 				p.activeUntil = formatter.parse(hm.get("activeUntil"));
 			} catch (ParseException e) {
-				log.error("Error parsing date"+hm.get("activeUntil"));
-				//e.printStackTrace();
+				log.error("Error parsing date" + hm.get("activeUntil"));
+				// e.printStackTrace();
 			}
 		}
 
@@ -150,12 +158,13 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 		p.xlActiveSince = parseTime(hm.get("xlActiveSince"));
 		p.xlActiveUntil = parseTime(hm.get("xlActiveUntil"));
 
-		p.overrideActive = (hm.get("overrideActive").equals("K")) ? true : false;
+		p.overrideActive = (hm.get("overrideActive").equals("K")) ? true
+				: false;
 
 		List<OverrideNr> overrideNr = new ArrayList<OverrideNr>();
 
 		if (hm.get("overrideNrs") != "") {
-			//Lets get override numbers and their names
+			// Lets get override numbers and their names
 			RowStr nrs = new RowStr(hm.get("overrideNrs"));
 			RowStr names = new RowStr(hm.get("overrideNames"));
 			OverrideNr oNr = new OverrideNr();
@@ -165,16 +174,30 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 			overrideNr.add(oNr);
 		}
 		p.overrideNr = overrideNr;
-		log.debug("Created:"+p);
+		log.debug("Created:" + p);
 		return p;
 	}
 
+	/**
+	 * Function to parse string that represents Time. Sample: 2355
+	 * 
+	 * @param t
+	 * @return Time
+	 */
 	private Time parseTime(String t) {
-		Time time = (!StringUtils.isBlank(t)) ? Time.valueOf(t.substring(0, 2) + ":" + t.substring(2, 4) + ":00") : null;
+		Time time = (!StringUtils.isBlank(t)) ? Time.valueOf(t.substring(0, 2)
+				+ ":" + t.substring(2, 4) + ":00") : null;
 		return time;
 	}
 
+	/**
+	 * Increment times runned.
+	 */
 	private void increment() {
+		if (timesRunned >= MAX_RUN_TIMES) {
+			timesRunned = 0;
+			log.info("Reseting. Maximum times runned:" + MAX_RUN_TIMES);
+		}
 		timesRunned++;
 		log.debug("Times run: " + timesRunned);
 	}
