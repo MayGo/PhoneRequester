@@ -40,6 +40,8 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 			.getLog(DefaultPhoneRequestService.class);
 	/** Holds last recieved PhoneRequest */
 	private PhoneReq lastPhoneReq;
+	private String urlStart = "http://people.proekspert.ee/ak/data_";
+	private String urlEnd = ".txt";
 
 	/**
 	 * Is incremented each time file is queried and is included in file name
@@ -62,13 +64,17 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 			lastPhoneReq = p;
 	}
 
+	private String getUrl(int i) {
+		return urlStart + i + urlEnd;
+	}
+
 	/** {@inheritDoc} */
 	@Override
 	@Scheduled(fixedRate = 5000)
 	public void doWebQuery() {
 		this.increment();
-		String url = "http://people.proekspert.ee/ak/data_" + timesRunned
-				+ ".txt";
+		String url = getUrl(timesRunned);
+		;
 		URL u;
 		InputStream is = null;
 		DataInputStream dis;
@@ -102,80 +108,79 @@ public class DefaultPhoneRequestService implements PhoneRequestService {
 		}
 	}
 
-	/**
-	 * Function that parses custom string that contains Phone Service
-	 * parameters. And return these parameters as PhoneReq object.
-	 * 
-	 * @param row
-	 * @return PhoneReq
-	 */
-	private PhoneReq parseRow(String row) {
+	/** {@inheritDoc} */
+	@Override
+	public PhoneReq parseRow(String row) {
 
 		log.debug("Parsing:" + row);
 		if (StringUtils.isBlank(row)) {
 			log.error("Unparseable row.Empty.");
 			return null;
 		}
+		try {
+			SimpleDateFormat formatter = new SimpleDateFormat("YYYYMMDD");
+			RowStr m = new RowStr(row);
+			Map<String, String> hm = new HashMap<String, String>();
+			// put everything in map of strings for easy access.
+			hm.put("active", m.left(1));
+			hm.put("phoneNr", m.left(20));
+			hm.put("xlStatus", m.left(1));
+			hm.put("lang", m.left(1));
+			hm.put("xlLang", m.left(1));
+			hm.put("activeUntil", m.left(8));
+			hm.put("activeUntilTime", m.left(4));
+			hm.put("xlActiveSince", m.left(4));
+			hm.put("xlActiveUntil", m.left(4));
+			hm.put("overrideActive", m.left(1));
+			hm.put("overrideNrs", m.left(120));
+			hm.put("overrideNames", m.left(160));
 
-		SimpleDateFormat formatter = new SimpleDateFormat("YYYYMMDD");
-		RowStr m = new RowStr(row);
-		Map<String, String> hm = new HashMap<String, String>();
-		// put everything in map of strings for easy access.
-		hm.put("active", m.left(1));
-		hm.put("phoneNr", m.left(20));
-		hm.put("xlStatus", m.left(1));
-		hm.put("lang", m.left(1));
-		hm.put("xlLang", m.left(1));
-		hm.put("activeUntil", m.left(8));
-		hm.put("activeUntilTime", m.left(4));
-		hm.put("xlActiveSince", m.left(4));
-		hm.put("xlActiveUntil", m.left(4));
-		hm.put("overrideActive", m.left(1));
-		hm.put("overrideNrs", m.left(120));
-		hm.put("overrideNames", m.left(160));
+			// parse and save map into PhoneReq object
+			PhoneReq p = new PhoneReq();
+			p.reqNr = timesRunned;
+			p.active = (hm.get("active").equals("A")) ? true : false;
+			p.phoneNr = hm.get("phoneNr").trim();
+			p.xlStatus = (hm.get("xlStatus").equals("J")) ? true : false;
+			p.lang = (hm.get("lang").equals("I")) ? "Inglise" : (hm.get("lang")
+					.equals("E")) ? "Eesti" : "";
+			p.xlLang = (hm.get("xlLang").equals("I")) ? "Inglise" : (hm
+					.get("xlLang").equals("E")) ? "Eesti" : "Eesti";
 
-		// parse and save map into PhoneReq object
-		PhoneReq p = new PhoneReq();
-		p.reqNr = timesRunned;
-		p.active = (hm.get("active").equals("A")) ? true : false;
-		p.phoneNr = hm.get("phoneNr").trim();
-		p.xlStatus = (hm.get("xlStatus").equals("J")) ? true : false;
-		p.lang = (hm.get("lang").equals("I")) ? "Inglise" : (hm.get("lang")
-				.equals("E")) ? "Eesti" : "";
-		p.xlLang = (hm.get("xlLang").equals("I")) ? "Inglise" : (hm
-				.get("xlLang").equals("E")) ? "Eesti" : "Eesti";
-
-		if (!StringUtils.isBlank(hm.get("activeUntil"))) {
-			try {
-				p.activeUntil = formatter.parse(hm.get("activeUntil"));
-			} catch (ParseException e) {
-				log.error("Error parsing date" + hm.get("activeUntil"));
-				// e.printStackTrace();
+			if (!StringUtils.isBlank(hm.get("activeUntil"))) {
+				try {
+					p.activeUntil = formatter.parse(hm.get("activeUntil"));
+				} catch (ParseException e) {
+					log.error("Error parsing date" + hm.get("activeUntil"));
+					// e.printStackTrace();
+				}
 			}
+
+			p.activeUntilTime = parseTime(hm.get("activeUntilTime"));
+			p.xlActiveSince = parseTime(hm.get("xlActiveSince"));
+			p.xlActiveUntil = parseTime(hm.get("xlActiveUntil"));
+
+			p.overrideActive = (hm.get("overrideActive").equals("K")) ? true
+					: false;
+
+			List<OverrideNr> overrideNr = new ArrayList<OverrideNr>();
+
+			if (hm.get("overrideNrs") != "") {
+				// Lets get override numbers and their names
+				RowStr nrs = new RowStr(hm.get("overrideNrs"));
+				RowStr names = new RowStr(hm.get("overrideNames"));
+				OverrideNr oNr = new OverrideNr();
+				oNr.nr = nrs.left(15);
+				oNr.name = names.left(20);
+				hm.get("overrideNrs");
+				overrideNr.add(oNr);
+			}
+			p.overrideNr = overrideNr;
+			log.debug("Created:" + p);
+			return p;
+		} catch (Exception ex) {
+			log.error("Unparseable row. e:" + ex);
+			return null;
 		}
-
-		p.activeUntilTime = parseTime(hm.get("activeUntilTime"));
-		p.xlActiveSince = parseTime(hm.get("xlActiveSince"));
-		p.xlActiveUntil = parseTime(hm.get("xlActiveUntil"));
-
-		p.overrideActive = (hm.get("overrideActive").equals("K")) ? true
-				: false;
-
-		List<OverrideNr> overrideNr = new ArrayList<OverrideNr>();
-
-		if (hm.get("overrideNrs") != "") {
-			// Lets get override numbers and their names
-			RowStr nrs = new RowStr(hm.get("overrideNrs"));
-			RowStr names = new RowStr(hm.get("overrideNames"));
-			OverrideNr oNr = new OverrideNr();
-			oNr.nr = nrs.left(15);
-			oNr.name = names.left(20);
-			hm.get("overrideNrs");
-			overrideNr.add(oNr);
-		}
-		p.overrideNr = overrideNr;
-		log.debug("Created:" + p);
-		return p;
 	}
 
 	/**

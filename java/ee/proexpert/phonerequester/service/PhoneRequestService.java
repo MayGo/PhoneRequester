@@ -25,4 +25,13 @@ public interface PhoneRequestService {
 	 * object, so getLastPhoneReq function can retrieve it.
 	 */
 	public void doWebQuery();
+	
+	/**
+	 * Function that parses custom string that contains Phone Service
+	 * parameters. And return these parameters as PhoneReq object.
+	 * 
+	 * @param row
+	 * @return PhoneReq
+	 */
+	public PhoneReq parseRow(String row) ;
 }
